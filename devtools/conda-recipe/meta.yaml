@@ -1,0 +1,31 @@
+{% set data = load_setup_py_data() %}
+
+package:
+  name: pdb2pka
+  version: {{ data.get('version') }}
+
+source:
+  path: ../../
+
+build:
+  number: 0
+  script: $PYTHON setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  build:
+    - python
+    - numpy
+  run:
+    - python
+    - numpy
+
+test:
+  imports:
+    - pdb2pka
+    - pdb2pka._pMC_mult
+    - pdb2pka.substruct.Algorithms
+
+about:
+  home: {{ data.get('url') }}
+  license: {{ data.get('license') }}
+  summary: {{ data.get('description') }}

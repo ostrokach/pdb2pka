@@ -1,3 +1,6 @@
+from __future__ import division
+from builtins import object
+from past.utils import old_div
 import networkx as nx
 from itertools import combinations
 
@@ -21,13 +24,13 @@ class ProteinGraph(object):
         self._build_nodes()
 
         #Create edges going in and out of S and T.
-        for key, v in self.pc.residue_variables.items():
+        for key, v in list(self.pc.residue_variables.items()):
             prot_instance = v.instances["PROTONATED"]
-            prot_capacity = prot_instance.energyNF / 2.0
+            prot_capacity = old_div(prot_instance.energyNF, 2.0)
             prot_node = key+("PROTONATED",)
 
             deprot_instance = v.instances["DEPROTONATED"]
-            deprot_capacity = deprot_instance.energyNF / 2.0
+            deprot_capacity = old_div(deprot_instance.energyNF, 2.0)
             deprot_node = key+("DEPROTONATED",)
 
             if prot_capacity != 0.0:
@@ -39,7 +42,7 @@ class ProteinGraph(object):
                 self.DG.add_edge(deprot_node, "T", capacity=deprot_capacity)
 
         #Create all interaction energy edges.
-        for p, q in combinations(iter(self.pc.residue_variables.items()),2):
+        for p, q in combinations(iter(list(self.pc.residue_variables.items())),2):
             p_key, p_residue = p
             q_key, q_residue = q
 
@@ -55,25 +58,25 @@ class ProteinGraph(object):
             q_deprot_instance = q_residue.instances["DEPROTONATED"]
             q_deprot_node = q_key+("DEPROTONATED",)
 
-            capacity = self.pc.normalized_interaction_energies[p_deprot_instance, q_deprot_instance] / 2.0
+            capacity = old_div(self.pc.normalized_interaction_energies[p_deprot_instance, q_deprot_instance], 2.0)
 
             if capacity != 0.0:
                 self.DG.add_edge(p_deprot_node, q_prot_node, capacity=capacity)
                 self.DG.add_edge(q_deprot_node, p_prot_node, capacity=capacity)
 
-            capacity = self.pc.normalized_interaction_energies[p_prot_instance, q_deprot_instance] / 2.0
+            capacity = old_div(self.pc.normalized_interaction_energies[p_prot_instance, q_deprot_instance], 2.0)
 
             if capacity != 0.0:
                 self.DG.add_edge(p_prot_node, q_prot_node, capacity=capacity)
                 self.DG.add_edge(q_deprot_node, p_deprot_node, capacity=capacity)
 
-            capacity = self.pc.normalized_interaction_energies[p_deprot_instance, q_prot_instance] / 2.0
+            capacity = old_div(self.pc.normalized_interaction_energies[p_deprot_instance, q_prot_instance], 2.0)
 
             if capacity != 0.0:
                 self.DG.add_edge(p_deprot_node, q_deprot_node, capacity=capacity)
                 self.DG.add_edge(q_prot_node, p_prot_node, capacity=capacity)
 
-            capacity = self.pc.normalized_interaction_energies[p_prot_instance, q_prot_instance] / 2.0
+            capacity = old_div(self.pc.normalized_interaction_energies[p_prot_instance, q_prot_instance], 2.0)
 
             if capacity != 0.0:
                 self.DG.add_edge(p_prot_node, q_deprot_node, capacity=capacity)
@@ -91,7 +94,7 @@ class ProteinGraph(object):
         """Creates a map of residues to instances based on the """
         labeling = {}
         uncertain = []
-        for key, v in self.pc.residue_variables.items():
+        for key, v in list(self.pc.residue_variables.items()):
             prot_node = key+("PROTONATED",)
             deprot_node = key+("DEPROTONATED",)
 

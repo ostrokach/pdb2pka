@@ -3,18 +3,22 @@
 # $Id$
 #
 
+from __future__ import division
+from builtins import range
+from builtins import object
+from past.utils import old_div
 import os
 
 
-class inputGen:
+class inputGen(object):
     #
     # Creating input files for the pKa calculations
     #
-    
+
     def __init__(self, pqrpath):
         """
             Initialize the inputGen class
-            
+
             Parameters
                 pqrpath: The full path to the PQR file (string)
                 center_residue: The residue on which the fine grid will be centered
@@ -30,10 +34,10 @@ class inputGen:
         #
         # PQR file
         #
-        
+
         self.pqrname=os.path.basename(pqrpath)
         self.fullpath=pqrpath
-        
+
         self.type='not set'
         #
         center,extent=self.getCenter()
@@ -57,14 +61,14 @@ class inputGen:
         #
         # Set all the attributes
         #
-        for prop in defaults.keys():
+        for prop in list(defaults.keys()):
             setattr(self,prop,defaults[prop])
         return
 
     #
     # -----
     #
-    
+
     def getCenter(self):
         #
         # Reads the PQR file and get the dimensions and the center of the molecule
@@ -83,11 +87,11 @@ class inputGen:
             line=fd.readline()
         fd.close()
         #
-        # Find extent 
+        # Find extent
         #
         minmax=[[999.9,-999.9],[999.9,-999.9],[999.9,-999.9]]
         for coord in coords:
-            for axis in xrange(3):
+            for axis in range(3):
                 if coord[axis]<minmax[axis][0]:
                     minmax[axis][0]=coord[axis]
                 if coord[axis]>minmax[axis][1]:
@@ -97,11 +101,11 @@ class inputGen:
         #
         center=[0,0,0]
         extent=[0,0,0]
-        for axis in xrange(3):
+        for axis in range(3):
             extent[axis]=minmax[axis][1]-minmax[axis][0]
-            center[axis]=extent[axis]/2.0+minmax[axis][0]
+            center[axis]=old_div(extent[axis],2.0)+minmax[axis][0]
         return center,extent
-    
+
     def setfineCenter(self, center):
         #
         # Set the center of the fine grid to center
@@ -124,23 +128,23 @@ class inputGen:
         self.type=type
         if type=='desolv':
             self.set_method('mg-manual')
-        elif type=='background': 
+        elif type=='background':
             self.set_method('mg-auto')
-            self.finedim=[self.coarsedim[0]/1.5,self.coarsedim[1]/1.5,self.coarsedim[2]/1.5]
+            self.finedim=[old_div(self.coarsedim[0],1.5),old_div(self.coarsedim[1],1.5),old_div(self.coarsedim[2],1.5)]
         elif type=='intene':
             self.set_method('mg-auto')
             #self.setfineCenter(self.coarsecent)
             #
             # Set the grid to be a little bigger than the protein
             #
-            self.finedim=[self.coarsedim[0]/1.5,self.coarsedim[1]/1.5,self.coarsedim[2]/1.5]
+            self.finedim=[old_div(self.coarsedim[0],1.5),old_div(self.coarsedim[1],1.5),old_div(self.coarsedim[2],1.5)]
         else:
             #
             # Not a known type
             #
-            raise 'unknown type',type
+            raise Exception('unknown type: {}'.format(type))
         return
-        
+
     def getText_sub(self):
         """
             Get the text associated with the inputgen object
@@ -148,7 +152,7 @@ class inputGen:
             Returns
                 text:  The input file (string)
         """
-        
+
         text  = "read\n"
         text += "    mol pqr %s\n" % self.pqrname
         if self.maps==1:
@@ -171,16 +175,16 @@ class inputGen:
         elif self.method=='mg-manual':
             text += "    glen %.4f %.4f %.4f\n" % (self.coarsedim[0], self.coarsedim[1], self.coarsedim[2])
             text += "    gcent %.3f %.3f %.3f\n" %(self.coarsecent[0],self.coarsecent[1],self.coarsecent[2])
-            
+
         else:
-            raise 'unknown method'
+            raise Exception('unknown method')
         #
-        text += "    mol 1\n"                            
-        text += "    lpbe\n"                             
-        text += "    bcfl sdh\n"                           
-        text += "    ion charge 1 conc 0.150 radius 2.0\n"            
-        text += "    ion charge -1 conc 0.150 radius 2.0\n"           
-        text += "    pdie %5.2f\n"  %self.pdie                
+        text += "    mol 1\n"
+        text += "    lpbe\n"
+        text += "    bcfl sdh\n"
+        text += "    ion charge 1 conc 0.150 radius 2.0\n"
+        text += "    ion charge -1 conc 0.150 radius 2.0\n"
+        text += "    pdie %5.2f\n"  %self.pdie
         text += "    sdie %5.2f\n" %self.sdie
         if self.maps == 2:
             text += "    srfm mol\n"
@@ -188,9 +192,9 @@ class inputGen:
             text += "    srfm smol\n"
         text += "    chgm spl2\n"
         text += "    srad 1.4\n"
-        text += "    swin 0.3\n" 
+        text += "    swin 0.3\n"
         text += "    sdens 10.0\n"
-        text += "    temp 298.15\n"     
+        text += "    temp 298.15\n"
         text += "    calcenergy total\n"
         text += "    calcforce no\n"
         if self.maps==1:
@@ -220,14 +224,14 @@ class inputGen:
         import math
         grids_per_A = 2.0
         dimension = 65
-        scale = grids_per_A/((dimension-1.0)/(2.0*max(self.coarsedim)/3.0))
+        scale = old_div(grids_per_A,(old_div((dimension-1.0),(2.0*max(self.coarsedim)/3.0))))
         if scale <= 1.0:
             depth = 1
         else:
-            depth = int(math.log(scale)/math.log(2.0)) + 3
-        
-        grid_dim = float(math.pow(2,depth-1)/grids_per_A)
-        
+            depth = int(old_div(math.log(scale),math.log(2.0))) + 3
+
+        grid_dim = float(old_div(math.pow(2,depth-1),grids_per_A))
+
         text  = "read\n"
         text += "    mol pqr %s\n" % self.pqrname
         text += "end\n"
@@ -236,43 +240,43 @@ class inputGen:
         text += "    dime %i %i %i\n" % (dimension, dimension, dimension)
         text += "    grid %.2f %.2f %.2f\n" % (grid_dim, grid_dim, grid_dim)
         text += "    gcent %.3f %.3f %.3f\n" % (self.finecent[0],self.finecent[1],self.finecent[2])
-        text += "    mol 1\n"                            
-        text += "    lpbe\n"                             
-        text += "    bcfl sdh\n"                           
-        text += "    ion charge 1 conc 0.150 radius 2.0\n"            
-        text += "    ion charge -1 conc 0.150 radius 2.0\n"           
-        text += "    pdie %5.2f\n"  %self.pdie                
+        text += "    mol 1\n"
+        text += "    lpbe\n"
+        text += "    bcfl sdh\n"
+        text += "    ion charge 1 conc 0.150 radius 2.0\n"
+        text += "    ion charge -1 conc 0.150 radius 2.0\n"
+        text += "    pdie %5.2f\n"  %self.pdie
         text += "    sdie %5.2f\n" %self.sdie
         text += "    srfm mol\n"
         text += "    chgm spl0\n"
         text += "    srad 1.4\n"
-        text += "    swin 0.3\n" 
+        text += "    swin 0.3\n"
         text += "    sdens 10.0\n"
-        text += "    temp 298.15\n"     
+        text += "    temp 298.15\n"
         text += "    calcenergy total\n"
         text += "    calcforce no\n"
         text += "    write pot dx potential0\n"
         text += "end\n"
-        
+
         for i in range(1, depth):
             text += "elec\n"
             text += "    mg-manual\n"
             text += "    dime %i %i %i\n" % (dimension, dimension, dimension)
             text += "    grid %.2f %.2f %.2f\n" % (grid_dim, grid_dim, grid_dim)
             text += "    gcent %.3f %.3f %.3f\n" % (self.finecent[0],self.finecent[1],self.finecent[2])
-            text += "    mol 1\n"                            
+            text += "    mol 1\n"
             text += "    lpbe\n"
-            text += "    bcfl focus\n"                           
-            text += "    ion charge 1 conc 0.150 radius 2.0\n"            
-            text += "    ion charge -1 conc 0.150 radius 2.0\n"           
-            text += "    pdie %5.2f\n"  %self.pdie                
+            text += "    bcfl focus\n"
+            text += "    ion charge 1 conc 0.150 radius 2.0\n"
+            text += "    ion charge -1 conc 0.150 radius 2.0\n"
+            text += "    pdie %5.2f\n"  %self.pdie
             text += "    sdie %5.2f\n" %self.sdie
             text += "    srfm mol\n"
             text += "    chgm spl0\n"
             text += "    srad 1.4\n"
-            text += "    swin 0.3\n" 
+            text += "    swin 0.3\n"
             text += "    sdens 10.0\n"
-            text += "    temp 298.15\n"     
+            text += "    temp 298.15\n"
             text += "    calcenergy total\n"
             text += "    calcforce no\n"
             text += "    write pot dx potential%d\n" %i
@@ -316,18 +320,18 @@ class inputGen:
     #
     # ------
     #
-    
+
     def printInput(self):
         basepath = os.path.dirname(self.fullpath)
         file_bits = self.pqrname.rsplit('.', 1)
         outname = '.'.join([file_bits[0], 'in'])
         outname = os.path.join(basepath, outname)
-        
+
         with open(outname, "w") as fd:
             fd.write(self.getText())
-            
+
         return outname
-        
+
 def main():
     import sys
     X=inputGenpKa(sys.argv[1],13)

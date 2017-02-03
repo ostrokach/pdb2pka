@@ -1,6 +1,12 @@
 from __future__ import print_function
-from graph import ProteinGraph
-from uncertainty import resolve_uncertainty
+from __future__ import division
+from __future__ import absolute_import
+from builtins import str
+from builtins import range
+from builtins import object
+from past.utils import old_div
+from .graph import ProteinGraph
+from .uncertainty import resolve_uncertainty
 from collections import defaultdict
 import math
 from pprint import pprint
@@ -23,12 +29,12 @@ def print_pc_state(pc, normal_form, out_file):
        normal_form - Dump the normal form part of the state."""
     rv = pc.residue_variables
     ie = pc.normalized_interaction_energies if normal_form else pc.interaction_energies_for_ph
-    for v_residue in rv.values():
-        for v_instance in v_residue.instances.values():
-            for w_residue in rv.values():
+    for v_residue in list(rv.values()):
+        for v_instance in list(v_residue.instances.values()):
+            for w_residue in list(rv.values()):
                 if v_residue == w_residue:
                     continue
-                for w_instance in w_residue.instances.values():
+                for w_instance in list(w_residue.instances.values()):
                     out_file.write(str((v_instance, w_instance)) + " " + str(round(ie[v_instance, w_instance],4)) + '\n')
     keys = list(pc.residue_variables.keys())
     for key in keys:
@@ -96,7 +102,7 @@ def get_titration_curves(protein_complex, state_file=None):
     pH = 0.0
     step_size = 0.1
     end_ph = 20.0
-    steps = int(end_ph / step_size) + 1
+    steps = int(old_div(end_ph, step_size)) + 1
 
     for step in range(steps):
         pH = step * step_size
@@ -127,7 +133,7 @@ def get_titration_curves(protein_complex, state_file=None):
         new_labeling = resolve_uncertainty(protein_complex, labeling, uncertain, verbose=True)
 
         curve_values = get_curve_values(protein_complex, new_labeling, pH)
-        for key, value in curve_values.items():
+        for key, value in list(curve_values.items()):
             curves[key].append((pH, value))
 
     return curves
@@ -140,7 +146,7 @@ def get_curve_values(protein_complex, labeling, pH):
 
     aH = math.pow(10, -pH)
 
-    for key, residue in protein_complex.residue_variables.items():
+    for key, residue in list(protein_complex.residue_variables.items()):
         name, chain, location = key
 
         if name in ("HId", "HIe"):
@@ -157,7 +163,7 @@ def get_curve_values(protein_complex, labeling, pH):
                 hid_residue = protein_complex.residue_variables["HId", chain, location]
 
             # dge = HSP - HSE, dgd = HSP - HSD
-            class Energies:
+            class Energies(object):
                 pass
             energies = Energies()
             energies.aH = aH
@@ -186,9 +192,9 @@ def get_curve_values(protein_complex, labeling, pH):
             pHSE = math.exp(-energies.ddG)
             pHSP = energies.aH*math.exp(-energies.dGp)
             Q = pHSD + pHSE + pHSP
-            fracHSD = pHSD/Q
-            fracHSE = pHSE/Q
-            fracHSP = pHSP/Q
+            fracHSD = old_div(pHSD,Q)
+            fracHSE = old_div(pHSE,Q)
+            fracHSP = old_div(pHSP,Q)
 
             # if not labeling[hie_residue].protonated and labeling[hid_residue].protonated:
             #     titration_value = fracHSD
@@ -212,7 +218,7 @@ def get_curve_values(protein_complex, labeling, pH):
             #Handle case where there is an unresolved bump.
             try:
                 e_exp = math.exp(exp)
-                titration_value = e_exp/(1.0+e_exp)
+                titration_value = old_div(e_exp,(1.0+e_exp))
             except OverflowError:
                 titration_value = 1.0
             results[key] = titration_value

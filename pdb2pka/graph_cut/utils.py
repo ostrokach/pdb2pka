@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import str
 from pdb2pka.graph_cut.protein_complex import ProteinComplex
 from pdb2pka.graph_cut.titration_curve import get_titration_curves
 
@@ -18,8 +20,8 @@ def _add_state_pair(pc, inter_avg,
         if flipped_inter_avg is not None:
             diff = abs(inter_avg - flipped_inter_avg)
             if diff > 0.0:
-                print group1_type, group1_chain, group1_loc, group1_state
-                print group2_type, group2_chain, group2_loc, group2_state
+                print(group1_type, group1_chain, group1_loc, group1_state)
+                print(group2_type, group2_chain, group2_loc, group2_state)
 
 
 
@@ -50,10 +52,10 @@ def process_desolv_and_background(protein_complex, pKa):
     res_type = pKa.pKaGroup.name
     chain = pKa.residue.chainID
     location = str(pKa.residue.resSeq)
-    for state, energy in pKa.desolvation.iteritems():
+    for state, energy in pKa.desolvation.items():
         _process_desolv_or_background_line(protein_complex, res_type, chain, location, state, energy)
 
-    for state, energy in pKa.background.iteritems():
+    for state, energy in pKa.background.items():
         _process_desolv_or_background_line(protein_complex, res_type, chain, location, state, energy)
 
 def _process_desolv_or_background_line(protein_complex, res_type, chain, location, state_name, energy):

@@ -1,3 +1,5 @@
+from builtins import str
+from builtins import object
 #
 # $Id$
 #
@@ -5,7 +7,7 @@
 # more logic at some point
 #
 #
-class pKa:
+class pKa(object):
     """
         The main pKa object
     """
@@ -42,7 +44,7 @@ class pKa:
 # -------------------------------------------
 #
 
-class pKaGroup:
+class pKaGroup(object):
     #
     # pKaGroup holds the defintion on a single titratable entity. In most cases we will
     # only have a single titration taking place in one group, but in some cases
@@ -94,7 +96,7 @@ class pKaGroup:
 # -----------------------------------------------
 #
 
-class DefTitration:
+class DefTitration(object):
     #
     # pKa_Titration holds all the info on a specific titration
     # We define a titration as a single group that has a number of

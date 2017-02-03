@@ -1,4 +1,10 @@
-from Tkinter import *
+from __future__ import division
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+from builtins import str
+from past.utils import old_div
+from tkinter import *
 
 class charge_mon(Frame):
 
@@ -40,7 +46,7 @@ class charge_mon(Frame):
                     fill='black'
                 self.cv.create_text(x_count,self.calc,text='%3d' %residue.resSeq,anchor='nw',fill=fill)
                 self.res_pos[residue.resSeq]=x_count
-                x_count=x_count+int((self.width-100)/self.numres)
+                x_count=x_count+int(old_div((self.width-100),self.numres))
         self.calc=self.calc+15
         self.master.update()
         return
@@ -56,13 +62,13 @@ class charge_mon(Frame):
         self.cv.create_text(0,self.calc,text=self.text,anchor='nw')
         charges={}
         for resnum,atomname,charge in charge_list:
-            if not charges.has_key(resnum):
+            if resnum not in charges:
                 charges[resnum]=[]
             charges[resnum].append(charge)
         #
         # Sum all charges
         #
-        for res in charges.keys():
+        for res in list(charges.keys()):
             non_zero=None
             sum=0.0
             for crg in charges[res]:
@@ -77,7 +83,7 @@ class charge_mon(Frame):
         #
         #
         later=[]
-        for resid in charges.keys():
+        for resid in list(charges.keys()):
             x_count=self.res_pos[resid]
             if charges[resid] is None:
                 fill='white'
@@ -90,7 +96,7 @@ class charge_mon(Frame):
             else:
                 fill='yellow'
 
-            self.cv.create_rectangle(x_count,self.calc,x_count+int((self.width-100)/self.numres),self.calc+10,fill=fill)
+            self.cv.create_rectangle(x_count,self.calc,x_count+int(old_div((self.width-100),self.numres)),self.calc+10,fill=fill)
             if fill=='yellow':
                 later.append([x_count,'%4.2f' %charges[resid],resid])
         #
@@ -98,7 +104,7 @@ class charge_mon(Frame):
         #
         for x_count,text,resid in later:
             self.cv.create_text(x_count,self.calc,text=text,anchor='nw',fill='black')
-            print '!!Wrong charge: %s %s' %(text,str(resid))
+            print('!!Wrong charge: %s %s' %(text,str(resid)))
         #
         # Update and increment row
         #

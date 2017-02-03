@@ -1,5 +1,8 @@
+from __future__ import print_function
+from __future__ import absolute_import
+from builtins import range
 from src.forcefield import *
-from peoe_PDB2PQR import PEOE as calc_charges
+from .peoe_PDB2PQR import PEOE as calc_charges
 from src.pdb import *
 from src.definitions import *
 from pdb2pka import NEWligand_topology
@@ -24,7 +27,7 @@ def initialize(definition, ligdesc, pdblist, verbose=0):
             definition: The updated definition for this protein
             Lig:       The ligand_charge_handler object
     """
-    
+
     Lig = ligand_charge_handler()
     Lig.read(ligdesc)
     atomnamelist=[]
@@ -35,7 +38,7 @@ def initialize(definition, ligdesc, pdblist, verbose=0):
             sys.stderr.write("Duplicate atom names (%s) found in ligand file!\n" % atom.name)
         else:
             atomnamelist.append(atom.name)
-            
+
     if duplicatesFound:
         raise PDBInputError("Duplicate atoms names.")
     # Create the ligand definition from the mol2 data
@@ -78,7 +81,7 @@ def initialize(definition, ligdesc, pdblist, verbose=0):
         atomB.bonds.append(atommap[bondA])
 
     # The last line is not yet supported - dihedrals
-    
+
     definition.map["LIG"] = ligresidue
 
     # Look for titratable groups in the ligand
@@ -86,14 +89,14 @@ def initialize(definition, ligdesc, pdblist, verbose=0):
     ligand_titratable_groups=X.find_titratable_groups()
 
     if verbose:
-        print "ligand_titratable_groups", ligand_titratable_groups
+        print("ligand_titratable_groups", ligand_titratable_groups)
     #
     # Append the ligand data to the end of the PDB data
     #
     newpdblist=[]
-       
+
     # First the protein
-    nummodels = 0 
+    nummodels = 0
     for line in pdblist:
         if isinstance(line, END) or isinstance(line,MASTER): continue
         elif isinstance(line, MODEL):
@@ -101,7 +104,7 @@ def initialize(definition, ligdesc, pdblist, verbose=0):
             if nummodels > 1: break
         else:
             newpdblist.append(line)
-    
+
     # Now the ligand
 
     for e in Lig.lAtoms:
@@ -114,23 +117,23 @@ def initialize(definition, ligdesc, pdblist, verbose=0):
     for rrres in  protein.chainmap['L'].residues:
         for aaat in rrres.atoms:
             for ligatoms in Lig.lAtoms:
-               
+
                 if ligatoms.name == aaat.name:
                     aaat.sybylType = ligatoms.sybylType
-    
+
                     # setting the formal charges
 
                     if ligatoms.sybylType == "O.co2":
                         aaat.formalcharge = -0.5
-                    else: 
+                    else:
                         aaat.formalcharge = 0.0
                     xxxlll = []
                     #for xxx in ligatoms.lBondedAtoms:
                     for bond in ligresidue.getAtom(aaat.name).bonds:
                         xxxlll.append(bond)
-        
+
                     aaat.intrabonds = xxxlll
-   
+
                     # charge initialisation must happen somewhere else
                     aaat.charge = 0.0
 
@@ -166,7 +169,7 @@ class ligforcefield(Forcefield):
         elif ff == "parse":
             defpath = PARSE_FILE
         else:
-            raise ValueError, "Invalid forcefield %s!" % ff
+            raise ValueError("Invalid forcefield %s!" % ff)
 
         if not os.path.isfile(defpath):
             for path in sys.path:
@@ -175,7 +178,7 @@ class ligforcefield(Forcefield):
                     defpath = testpath
                     break
         if not os.path.isfile(defpath):
-            raise ValueError, "Unable to find forcefield %s!" % defpath
+            raise ValueError("Unable to find forcefield %s!" % defpath)
 
         file = open(defpath, 'rU')
         lines = file.readlines()
@@ -202,7 +205,7 @@ class ligforcefield(Forcefield):
         #self.lig.read(ligfilename)
         return
 
-    
+
     def getParams(self,residue,name):
         """
             Get the parameters associated with the input fields.
@@ -253,7 +256,7 @@ class ligforcefield(Forcefield):
 #
 # Parse radii data for C, N, O, S, H, Br, F, P are from Sitkoff et al's paper (Sitkoff D, Sharp KA, Honig B.
 # Accurate Calculation of Hydration Free Energies Using Macroscopic Solvent Models. J Phys Chem 98 (7) 1978-88, 1994.
-# (http://pubs.acs.org/cgi-bin/archive.cgi/jpchax/1994/98/i07/pdf/j100058a043.pdf)) and AMBER mailing list 
+# (http://pubs.acs.org/cgi-bin/archive.cgi/jpchax/1994/98/i07/pdf/j100058a043.pdf)) and AMBER mailing list
 # (http://amber.ch.ic.ac.uk/archive/). The radius for Cholrine is Van der Waals radius.
 #
 
@@ -268,7 +271,7 @@ ParseRadiiDict = {"C": 1.70,
                    "Cl": 1.75}
 
 #Add lower case keys to more lenient matching.
-ParseRadiiDictLower = dict((key.lower(), value) for key, value in ParseRadiiDict.items()) 
+ParseRadiiDictLower = dict((key.lower(), value) for key, value in list(ParseRadiiDict.items()))
 ParseRadiiDict.update(ParseRadiiDictLower)
 
 class ligand_charge_handler(MOL2MOLECULE):
@@ -289,7 +292,7 @@ class ligand_charge_handler(MOL2MOLECULE):
             #print "newly_calced - net charge %1.4f" %(qqqgesges)
             #print
         else:
-            atoms_last_calc=self.ligand_props.keys()
+            atoms_last_calc=list(self.ligand_props.keys())
             #
             # Get the atoms presently in the pdb2pqr array
             #
@@ -317,30 +320,30 @@ class ligand_charge_handler(MOL2MOLECULE):
                 #
                 for atom in atoms_now:
                     if not atom in atoms_last_calc:
-                        print 'This atom was missing before',atom
-                        print 'If it is a hydrogen for the titratable, we need to create a bond entry!'
+                        print('This atom was missing before',atom)
+                        print('If it is a hydrogen for the titratable, we need to create a bond entry!')
                         # We should be here only if is a titratable
                         for current_atom in atoms_now:
                             # check if it't a titratable H
                             for res_atoms in residue.atoms:
                                 if current_atom == res_atoms.name and "titratableH"  in dir(res_atoms):
-                                    print "nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn"
-                                    print "been here"
+                                    print("nnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnnn")
+                                    print("been here")
                                     for ResAtoms in residue.atoms:
                                         ResAtoms.formalcharge = 0.0
                                     self.recalc_charges(residue)
                 for atom in atoms_last_calc:
                     if not atom in atoms_now:
-                        print 'This atom used to be here, but is now missing',atom
+                        print('This atom used to be here, but is now missing',atom)
                 #self.recalc_charges(residue)
                 xxxnetq = 0.0
                 for xxx in residue.atoms:
-                    print "after neutralizing %s  %1.4f" %(xxx.name, xxx.charge)
+                    print("after neutralizing %s  %1.4f" %(xxx.name, xxx.charge))
                     xxxnetq = xxxnetq+xxx.charge
-                print '-----------------------'
-                print "net charge: %1.4f" % (xxxnetq)
-                print
-                print
+                print('-----------------------')
+                print("net charge: %1.4f" % (xxxnetq))
+                print()
+                print()
             else:
                 # Yes - nothing to do
                 pass
@@ -351,7 +354,7 @@ class ligand_charge_handler(MOL2MOLECULE):
 
     #
     # ----
-    #   
+    #
 
     def recalc_charges(self,residue):
         #
@@ -378,12 +381,14 @@ class ligand_charge_handler(MOL2MOLECULE):
         for at in residue.atoms: # WAS: self.lAtoms:
             ele = at.sybylType.split('.')[0]
             charge = at.charge
-            if ParseRadiiDict.has_key(ele):
+            if ele in ParseRadiiDict:
                 radius = ParseRadiiDict[ele]
             else:
-                raise 'Please check ParseRadiiDict in ligff.py -- radius data not found for',ele
+                raise Exception(
+                    'Please check ParseRadiiDict in ligff.py -- radius data not found for: {}'
+                    .format(ele))
             #
             # Store the radii and charges
             #
             self.ligand_props[at.name]={'charge':charge,'radius':radius}
-        return    
+        return

@@ -1,11 +1,10 @@
 import os
-import os.path as op
-from distutils.sysconfig import get_python_inc
+# import os.path as op
+# from distutils.sysconfig import get_python_inc
 
 from setuptools import Extension, setup
-from setuptools.command.build_py import build_py
+# from setuptools.command.build_py import build_py
 import numpy as np
-
 
 
 def read(fname):
